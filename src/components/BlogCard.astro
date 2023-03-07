@@ -1,0 +1,17 @@
+---
+import type { CollectionEntry } from "astro:content";
+interface Props {
+  blog: CollectionEntry<'blog'>
+}
+
+const { blog } = Astro.props;
+---
+<a href={`/blog/${blog.slug}`}>
+  <article class={
+    "flex flex-col gap-4 p-8 w-full max-w-xl hover:shadow-xl " +
+    "transition-all duration-300 border-black border-4 rounded-xl" }
+  >
+    <h1 class="text-3xl font-bold">{blog.data.title}</h1>
+    <p class="text-xl">{blog.data.description}</p>
+  </article>
+</a>

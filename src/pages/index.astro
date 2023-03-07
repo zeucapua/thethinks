@@ -1,15 +1,25 @@
 ---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import BlogCard from "../components/BlogCard.astro";
+import { getCollection } from "astro:content";
+const blogs = await getCollection("blogs");
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<SiteLayout title="The Thinks by Zeu">
+
+<section class="flex flex-col lg:py-8 gap-8 w-full max-w-2xl h-full min-h-2xl mx-auto">
+  <p class="text-5xl text-center font-bold">Technology and Learning.</p>
+  <p class="text-3xl text-center">by Zeu Capua</p>
+</section>
+
+<section class="flex flex-col gap-8 mx-auto">
+  <h2 class="text-4xl font-bold">Blogs</h2>
+  {
+    blogs.map( entry => ( <BlogCard blog={entry} /> ))
+  }
+  <p class="text-2xl text-center text-neutral-500">more coming...</p>
+</section>
+
+
+</SiteLayout>
+

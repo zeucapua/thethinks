@@ -1,0 +1,19 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection('blogs');
+  return entries.map( entry => ({ params: { slug: entry.slug }, props: { entry } }) );
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<SiteLayout title={`${entry.data.title} | The Thinks`}>
+  <article class="prose prose-xl mx-auto w-full max-w-4xl h-full">
+    <h1 class="text-6xl font-bold">{entry.data.title}</h1>
+    <Content />
+  </article>
+</SiteLayout>
