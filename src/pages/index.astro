@@ -7,8 +7,10 @@ const blogs = await getCollection("blogs");
 
 <SiteLayout title="The Thinks by Zeu">
 
-<section class="flex flex-col gap-8 mx-auto">
-  <h2 class="text-4xl underline underline-offset-8 font-bold font-bebasneue">Recently Released</h2>
+<h2 class="text-4xl md:text-5xl text-primary underline underline-offset-8 font-bold font-bebasneue">
+  Recently Released
+</h2>
+<section class="flex flex-col divide-y gap-8 mx-auto">
   {
     blogs.map( entry => ( <BlogCard blog={entry} /> ))
   }

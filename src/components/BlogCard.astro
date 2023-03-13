@@ -7,8 +7,15 @@ interface Props {
 const { blog } = Astro.props;
 ---
 <a href={`/blog/${blog.slug}`}>
-  <article>
-    <h1 class="text-3xl font-bebasneue font-bold">{blog.data.title}</h1>
-    <p class="text-xl font-nunito">{blog.data.description}</p>
+  <article class="mx-auto w-full max-w-2xl">
+    <section class="flex flex-row gap-8 items-end w-fit border-dotted border-b-4">
+      <h1 class="text-primary text-4xl font-bebasneue font-bold">
+        {blog.data.title}
+      </h1>
+      <h3 class="text-primary font-nunito font-bold">
+        {blog.data.publish_date.toLocaleDateString("en-US")}
+      </h3>
+    </section>
+    <p class="text-xl font-nunito py-2">{blog.data.description}</p>
   </article>
 </a>

@@ -1,11 +1,14 @@
-<nav class="font-bebasneue items-center text-3xl flex flex-row justify-between py-4 max-w-xl border-b-2 gap-8">
-  <a href="/"> 
-    <p class="text-4xl transition-all duration-300">The Thinks</p>
+<nav class="font-bebasneue items-center text-3xl flex flex-col md:flex-row justify-between py-4 max-w-5xl border-b-2 md:gap-8">
+  <a href="/" class="flex flex-row items-center"> 
+    <img src="/computer-old-electronics.svg" class="h-full max-h-16 fill-white"/>
+    <p class="text-primary text-4xl transition-all duration-300">The Thinks</p>
   </a>
-  <a href="/">
-    <p class="hover:text-accent transition-all duration-300">collections</p>
-  </a>
-  <a href="https://zeudev.vercel.app">
-    <p class="hover:text-accent transition-all duration-300">about</p>
-  </a>
+  <div class="flex flex-row items-center justify-between gap-4 md:gap-8">
+    <a href="/" style="pointer-events: none;">
+      <p class="hover:text-secondary-content transition-all duration-300">collections</p>
+    </a>
+    <a href="https://zeudev.vercel.app">
+      <p class="hover:text-secondary-content transition-all duration-300">about</p>
+    </a>
+  </div>
 </nav>

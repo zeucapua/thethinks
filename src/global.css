@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "BebasNeue";
+  src: url("/BebasNeue-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/Nunito-Variable.ttf");
+}
