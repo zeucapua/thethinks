@@ -1,0 +1,122 @@
+---
+title: "Svelte Authentication Tutorial with Authorizer"
+description: "Using Railway, Svelte's grouped routes, and cookies, authentication couldn't be easier."
+publish_date: "2023-03-16"
+---
+
+Authentication in web applications can be daunting. I know it was for me, but after scouring the internet
+for great free and open source projects, I think we got a neat solution. 
+
+In today's tutorial, we will be using the open source project [Authorizer](https://authorizer.dev), 
+deployed on [Railway](https://railway.app), which you can think about like "[Vercel](https://vercel.com) for the
+backend" where you can create databases and services for you to use without the tedious configuration and deployment.
+
+For the web application, we will be using [SvelteKit](https://kit.svelte.dev), a full stack framework by
+[Vercel](https://vercel.com), using the [Svelte](https://svelte.dev) UI framework created by
+[Rich Harris](https://twitter.com/Rich_Harris). 
+
+Svelte and SvelteKit makes web development easy and reactive with
+ease. Its decisions when it comes to reserved file names and separation of concerns helps with grasping the mental
+model. Let's get this tutorial started to see what I mean.
+
+## Install and Initial Configuration
+### Authorizer and Railway Setup
+Before anything, let's get Authorizer set up. Go to [Railway](https://railway.app) and create a new project.
+From here, choose **Deploy a template** and choose **Authorizer**. Once created, the project should have three 
+services made, a Redis and Postgres database, and a site hosting the Authorizer dashboard. Open the dashboard and 
+you'll be met with a login screen. Create and enter a new password and login to see your Client ID. 
+Keep this in mind and ready for the next step of configuration.
+
+// IMAGES AND VIDEOS?
+
+### SvelteKit and NPM Package Install
+> The following requires you to have [Node.js](https://nodejs.org/en) installed if you want to develop 
+this project on your local computer. If you want to just try this out, you can use sites like
+[StackBlitz](https://stackblitz.com) and [Replit](https://replit.com) for online cloud development.
+
+Next up is your web application. To create a SvelteKit project, use the terminal and enter `npm create svelte@latest`
+to go through the prompts. I will be using Typescript for this tutorial, but it is not necessary. I would
+recommend getting used to it as it is being more preferred for production/professional developments.
+
+// IMAGES AND VIDEOS?
+
+Use the terminal to go inside the project folder and we can install the Authorizer Svelte-specific package by
+entering `npm i --save @authorizer/authorizer-svelte`. To setup the project for Authorizer, we will need to 
+create a `.env` file in the root of our SvelteKit projects. We will make a few environment variables called
+`PUBLIC_AUTHORIZER_URL` and `PUBLIC_AUTHORIZER_CLIENT_ID`. Set the URL to where the Authorizer dashboard is set, which you
+can find in your Railway project page, and the client ID can be found inside said dashboard.
+
+// IMAGES
+
+## Basic Authorizer Usage
+To start using Authorizer, we are going to initialize it using the `AuthorizerProvider` component to wrap
+our content. We're going to use it inside a `+layout.svelte` file for now with the following code:
+
+```svelte
+<!-- /src/routes/+layout.svelte -->
+<script lang="ts">
+  // style the Authorizer components; can be configured to your custom theme
+  // see https://docs.authorizer.dev/authorizer-svelte#updating-styles
+  import "@authorizerdev/authroizer-svelte/styles/default.css";
+
+  // Authorizer Wrapper 
+  import { AuthorizerProvider } from "@authorizerdev/authorizer-svelte";
+  
+  // get our public environment variables using the "$env" Svelte module
+  import { PUBLIC_AUTHORIZER_URL, PUBLIC_AUTHORIZER_CLIENT_ID } from "$env/static/public";
+
+</script>
+
+
+<!-- Let's put it all together! -->
+<AuthorizerProvider
+  config={{
+    authorizerURL: PUBLIC_AUTHORIZER_URL,
+    redirectURL: typeof window != "undefined" ? window.location.origin : "",
+    clientID: PUBLIC_AUTHORIZER_CLIENT_ID
+  }}
+>
+  <slot />
+</AuthorizerProvider>
+```
+
+To explain real quick: the `AuthorizerProvider` component is being configured using the `config` attribute
+that has our environment variables. We have to name these variables with the `PUBLIC_` prefix since SvelteKit
+ensures that there are no real secrets being leaked to the client, so the prefix tells our framework that this
+is ok. Inside we can see the `<slot />` tag which is where our children `+page.svelte` files will render in.
+Speaking of which...
+
+```svelte
+<!-- /src/routes/+page.svelte -->
+<script lang="ts">
+  import { getContext } from "svelte";
+  import { Authorizer } from "@authorizer/authorizer-svelte";
+  import type { AuthorizerState } from "@authorizer/authorizer-svelte/types";
+
+  // instantiate Authorizer variables (state and context)
+  let auth_state : AuthorizerState;
+  let auth_context = getContext("authorizerContext");
+
+  // ensure that state changes when context does
+  auth_context.subscribe(
+    (data : AuthorizerState) => { auth_state = data; }
+  );
+
+  // to logout using Authorizer and changing the context's data
+  async function logout() {
+    await auth_state.logout();
+  }
+</script>
+
+
+{#if auth_state.user}
+  <p>{auth_state.user.email}</p>
+  <button on:click={logout}>Logout</button>
+{:else}
+  <Authorizer />
+{/if}
+
+```
+
+
+

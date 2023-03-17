@@ -12,7 +12,7 @@ const { Content } = await entry.render();
 ---
 
 <SiteLayout title={`${entry.data.title} | The Thinks`}>
-  <section class="flex flex-col border-b-8 gap-4 py-8 font-nunito">
+  <section class="flex flex-col border-b-8 gap-4 py-8 font-nunito max-w-4xl">
     <h1 class="text-primary text-8xl font-bebasneue font-bold">{entry.data.title}</h1>
     <h2 class="text-xl italic">{entry.data.description}</h2>
     <h2 class="text-primary">{entry.data.publish_date.toLocaleDateString("en-US")}</h2>
