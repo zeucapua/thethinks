@@ -17,7 +17,15 @@ For the web application, we will be using [SvelteKit](https://kit.svelte.dev), a
 
 Svelte and SvelteKit makes web development easy and reactive with
 ease. Its decisions when it comes to reserved file names and separation of concerns helps with grasping the mental
-model. Let's get this tutorial started to see what I mean.
+model. 
+
+> As a final note, the rest of this blog will assume you know the basics around HTML, CSS, and Javascript. 
+
+> Also, I'm fairly new to web development. This is **less** of a "tutorial" and more of a way I've learned to make this work for me.
+If I've fibbed on a tech explanation or know of a better solution or why it shouldn't be done this way, please let me know!
+I'm always learning! 
+
+Now let's get this started!
 
 ## Install and Initial Configuration
 ### Authorizer and Railway Setup
@@ -117,6 +125,204 @@ Speaking of which...
 {/if}
 
 ```
+
+*Okay, there's a lot going on.* Instead of just talking about the code, let's use a diagram to explain what all these mean.
+
+// DIAGRAM (CODETHROUGH?) Toggle to read explanation (like a footnote) dont force people into reading this lol
+
+As you can see, the `+layout.svelte` is the parent of `+page.svelte`, and it is holding the `AuthorizerProvider`
+and with it comes a `authorizerContext` [being set][1]. A [context][2] is used in Svelte to allow parents and 
+their children components to pass data between themselves. Parent components, in this case the `+layout.svelte`, 
+use `setContext(key, context)`, where "key" is the identifier that points to the "context", 
+which is the actual data. In the `AuthorizerProvider`  [component code][3], the "key" is called "authorizerContext" 
+which points to an `AuthorizerState` object. That has the [data][4] that will be fetched from your Railway Authorizer instance.
+
+We are going to grab this data in our `+page.svelte` file, the child component, which will be rendered on the client browser by using the
+`getContext(key)`. While this is good, this doesn't make the data immediately reactive to any changes (in this case,
+any user state changes). Good thing that the context's data is a store, so all we need to do is to `subscribe` to any
+changes that happens. After that, it is straightforward! Use an if else block in our HTML to check if our `auth_state`
+has a user logged in, then we show the email and add a logout button; otherwise, we will use their `Authorizer` 
+component to render the login form.
+
+## Decoupled Data & Cookies
+While we can keep our code just like above and have working basic authentication, any application will probably have a separate 
+database solution to get user data since Authorizer only stores auth-based information (email, password, account details, etc.); 
+in my case, on my current project **Lophop**, I also have a separate PostgresSQL database that has the user's application data 
+being used with Prisma ORM. Since my data is architected this way, I connect them using the Authorizer's authentication id.
+
+The way I implemented this is using cookies. From my understanding, cookies are small pieces of persistant data that is stored
+in the client's browsers that can be set and accessed by web applications. In this case, we are going to put the user's Authorizer ID
+and the access token as cookies and make sure they *expire* when the access token does. To do this, we are going to modify our current pages.
+
+First we are going to move our current `+layout.svelte` and `+page.svelte` files, and a new `+layout.server.ts` file,
+into a new page called `/login` (we'll add a button  in the main page to go to it). Next, we're going to create a new page folder called 
+`/redirect` that has a `+page.server.ts` and `+page.svelte`. Now let's add some code:
+
+```svelte
+<!-- /src/routes/+page.svelte -->
+
+<a href="/login">Login</a>
+```
+
+```ts
+// /src/routes/login/+layout.server.ts
+import { redirect } from "@sveltejs/kit";
+
+export async function load({ cookies }) {
+  // get cookies, if already set
+  const auth_id = cookies.get("auth_id");
+  const access_token = cookies.get("access_token");
+
+  // if already set, go to another page
+  if (access_token && auth_id) {
+    // we will make this "/dashboard" page in the next step
+    throw redirect(308, "/dashboard");
+  }
+}
+```
+
+```svelte
+<!-- /src/routes/login/+page.svelte -->
+<script lang="ts">
+  // ...other imports 
+  // add a new import to navigate to the redirect
+  import { goto } from "$app/navigation";
+
+  // ... auth_state & auth_context stuff
+
+  // REMOVE logout function and REPLACE with loginHandler
+  async function loginHandler(loginResponse) {
+    if (loginResponse.message === "Logged in successfully") {
+      // get relevant data from loginResponse
+      const auth_id = loginResponse.user.id;
+      const access_token = loginResponse.access_token;
+      const expires_in = loginResponse.expires_in;
+
+      // logout with state to ensure any other authentication data isn't accessed anymore
+      await auth_state.logout();
+
+      // go to the redirect page with relevant data as URL parameters
+      goto(`/redirect/?auth_id=${auth_id}&access_token=${access_token}&expires_in=${expires_in}`);
+    }
+  }
+</script>
+
+<!-- REMOVE previous HTML code and REPLACE with... ->
+<Authorizer onLogin={(loginResponse) => loginHandler(loginResponse)} />
+```
+
+```ts
+// /src/routes/redirect/+page.server.ts
+import { redirect } from "@sveltejs/kit";
+
+export async function load({ cookies, url }) {
+  // get cookies, if already set
+  const auth_id = cookies.get("auth_id");
+  const access_token = cookies.get("access_token");
+
+  // if cookies already set, go to home page
+  // we will make this "/dashboard" page in the next step
+  if (auth_id && access_token) { throw redirect(308, "/dashboard"); }
+  else {
+    // get the URL parameters
+    const auth_id = url.searchParams.get("auth_id");
+    const access_token = url.searchParams.get("access_token");
+    const expires_in = url.searchParams.get("expires_in");
+
+    // if we are in the redirect page with no URL parameters, 
+    // go back to /login to ensure we have data.
+    if ( !(auth_id && access && expires_in) ) {
+      throw redirect(308, "/login");
+    }
+    
+    // other we are going to use the URL parameters that has our relevant data and 
+    // set the cookies ourselves and ensure they expire
+    cookies.set("auth_id", auth_id, {
+      path: "/",
+      maxAge: parseInt(expires_in)
+    });
+
+    cookies.set("access_token", access_token, {
+      path: "/",
+      maxAge: parseInt(expires_in)
+    });
+
+    // we will make this "/dashboard" page in the next step
+    throw redirect(308, "/dashboard");
+  }
+}
+```
+
+```svelte
+<!-- /src/routes/redirect/+page.svelte -->
+<p>Loading...</p>
+```
+
+As you may have noticed, SvelteKit has reserved file names to create a separation of concerns. In this case,
+we have files that end with `.svelte`, which renders as components, or with `+layout` and `+page`, render as pages and its 
+parent wrapper. We are also using files that end with `.server.ts` (which is Typescript specific, end with `.server.js` for 
+Javascript), to access a reserved `load` function where we can set and access the cookies. Note that the `path` is set to `"/"`
+so that the cookie is available throughout the entire web application.
+
+Both the `/login` and `/redirect` `.server.ts` files start with checking if there are cookies already set; if so, they 
+redirect to the `/dashboard` for automatic login. Otherwise, they continue with their functions: `/login` will render with 
+the Authorizer login component, and `/redirect` will set the cookies.
+
+Speaking of which, in the `/redirect` `load` function also allows us to get the data embedded in the URL when being 
+navigated to from the `/login` page. To do so, all we need to do is add the `url` parameter and get the data with 
+`url.searchParams.get(key)`. So when we navigated to `/redirect/?auth_id=abc&expires_in=123`, we can can code 
+`const auth_id = url.searchParams.get("auth_id")` and `const expiry = url.searchParams.get("expires_in")` (NOTE: 
+the data returned is a string, so to use any numbers from the `searchParams`, use something like `parseInt` to turn the 
+string into a number you can actually use).
+
+## Authorized Route Access
+
+We have authentication working! Congratulations. Well, not yet. We have a final layer of security: grouped routes. 
+[Grouped routes][5] is an advanced maneuver- sorry no, an advanced routing tool that allows us to, well, group routes.
+By that I mean that we can use the `+layout.server.ts` file inside these groups as a checker if we can access any of its 
+member routes. You can see this in a small example in the [SvelteKit's tutorial][6] on route groups.
+
+In this explainer, we're going to use the group's `+layout.server.ts` to check the cookies and redirect back to the login 
+page if they are not found, the same the `/redirect` code . The good thing is that we don't need to redirect when they *are* 
+found because this group `+layout.svelte` and `+layout.server.ts` are just a parent wrapper, but invisible to the actual 
+route url (you're users aren't going to `https://adc.dev/(authed)/dashboard). Let's write it!
+
+```svelte
+<!-- /src/routes/(authed)/+layout.svelte -->
+<slot />
+```
+
+```ts 
+// src/routes/(authed)/+layout.server.ts
+import { redirect } from "@sveltejs/kit";
+
+export function load({ cookies }) {
+  // get cookies, if already set
+  const auth_id = cookies.get("auth_id");
+  const access_token = cookies.get("access_token");
+
+  // if not found, go back to /login
+  if ( !(access_token && auth_id) ){
+    throw redirect(308, "/login");
+  }
+}
+```
+
+```svelte
+<!-- /src/routes/(authed)/dashboard/+page.svelte -->
+<p>You're in.</p>
+```
+
+## Authorizer Logout
+
+The last thing we're going to need is a way for the user to logout. Since the algorathim
+
+[1]: https://github.com/authorizerdev/authorizer-svelte/blob/main/src/lib/components/AuthorizerProvider.svelte#L209
+[2]: https://kit.svelte.dev/docs/state-management#using-stores-with-context
+[3]: https://github.com/authorizerdev/authorizer-svelte/blob/main/src/lib/components/AuthorizerProvider.svelte#L18-L22
+[4]: https://github.com/authorizerdev/authorizer-svelte/blob/main/src/lib/types/index.ts#L34-L45
+[5]: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts-group
+[6]: https://learn.svelte.dev/tutorial/route-groups
 
 
 

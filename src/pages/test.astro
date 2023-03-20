@@ -1,0 +1,9 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import Codethrough from "../components/Codethrough.svelte";
+---
+
+<SiteLayout title="Test Page">
+  <p class="text-black">Test</p>
+  <Codethrough step={0} highlights={[[1]]} content="test\nanotherone" />
+</SiteLayout>
