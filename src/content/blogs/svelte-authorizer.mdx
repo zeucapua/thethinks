@@ -63,7 +63,7 @@ our content. We're going to use it inside a `+layout.svelte` file for now with t
 <script lang="ts">
   // style the Authorizer components; can be configured to your custom theme
   // see https://docs.authorizer.dev/authorizer-svelte#updating-styles
-  import "@authorizerdev/authroizer-svelte/styles/default.css";
+  import "@authorizerdev/authorizer-svelte/styles/default.css";
 
   // Authorizer Wrapper 
   import { AuthorizerProvider } from "@authorizerdev/authorizer-svelte";
@@ -96,8 +96,8 @@ Speaking of which...
 <!-- /src/routes/+page.svelte -->
 <script lang="ts">
   import { getContext } from "svelte";
-  import { Authorizer } from "@authorizer/authorizer-svelte";
-  import type { AuthorizerState } from "@authorizer/authorizer-svelte/types";
+  import { Authorizer } from "@authorizerdev/authorizer-svelte";
+  import type { AuthorizerState } from "@authorizerdev/authorizer-svelte/types";
 
   // instantiate Authorizer variables (state and context)
   let auth_state : AuthorizerState;
@@ -189,12 +189,14 @@ export async function load({ cookies }) {
   // ... auth_state & auth_context stuff
 
   // REMOVE logout function and REPLACE with loginHandler
-  async function loginHandler(loginResponse) {
-    if (loginResponse.message === "Logged in successfully") {
-      // get relevant data from loginResponse
-      const auth_id = loginResponse.user.id;
-      const access_token = loginResponse.access_token;
-      const expires_in = loginResponse.expires_in;
+  // This will be used on both "login" and "signup" actions
+  async function authHandler(authResponse : any) {
+    const msg = authRepsonse.message;
+    if (msg === "Logged in successfully" || msg === "Signed up successfully.") {
+      // get relevant data from authResponse 
+      const auth_id = authResponse.user.id;
+      const access_token = authResponse.access_token;
+      const expires_in = authResponse.expires_in;
 
       // logout with state to ensure any other authentication data isn't accessed anymore
       await auth_state.logout();
@@ -205,8 +207,11 @@ export async function load({ cookies }) {
   }
 </script>
 
-<!-- REMOVE previous HTML code and REPLACE with... ->
-<Authorizer onLogin={(loginResponse) => loginHandler(loginResponse)} />
+<!-- REMOVE previous HTML code and REPLACE with... -->
+<Authorizer 
+  onLogin={(loginResponse) => authHandler(loginResponse)} 
+  onSignup={(signupResponse) => authHandler(signupResponse)}
+/>
 ```
 
 ```ts
@@ -321,16 +326,14 @@ implementation of form actions in the `.server.ts` files.
 ```svelte
 <!-- /src/routes/(authed)/dashboard/+page.svelte -->
 <p>You're in.</p>
-<form method="POST">
-  <button formaction="?/logout">
-    Logout
-  </button>
+<form method="POST" action="?/logout">
+  <button>Logout</button>
 </form>
 ```
 
 ```ts
 // /src/routes/(authed)/dashboard/+page.server.ts 
-import { Actions } from "@sveltejs/kit";
+import { redirect, type Actions } from "@sveltejs/kit";
 
 // connects to the Form component on the page
 export const actions : Actions = {
