@@ -7,7 +7,7 @@ interface Props {
 const { blog } = Astro.props;
 ---
 <a href={`/blog/${blog.slug}`}>
-  <article class="mx-auto w-full max-w-2xl">
+  <article class="mx-auto w-full max-w-3xl">
     <section class="flex flex-row gap-8 items-end w-fit border-dotted border-b-4">
       <h1 class="text-secondary text-4xl font-bebasneue font-bold">
         {blog.data.title}
@@ -16,6 +16,6 @@ const { blog } = Astro.props;
         {blog.data.publish_date.toLocaleDateString("en-US")}
       </h3>
     </section>
-    <p class="text-xl font-nunito py-2">{blog.data.description}</p>
+    <p class="text-xl font-nunito py-2 max-w-2xl">{blog.data.description}</p>
   </article>
 </a>

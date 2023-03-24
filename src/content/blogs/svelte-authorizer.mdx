@@ -1,8 +1,16 @@
 ---
 title: "Svelte Authentication Tutorial with Authorizer"
 description: "Using Railway, Svelte's grouped routes, and cookies, authentication couldn't be easier."
-publish_date: "2023-03-16"
+publish_date: "2023-03-24"
 ---
+
+<section class="not-prose flex flex-row gap-4 items-center">
+**See this project:**
+<a href="https://github.com/zeucapua/svelte-authorizer-demo" class="not-prose">
+  <button class="px-4 py-2 rounded-xl text-sm bg-accent text-accent-content">Open in GitHub</button>
+</a>
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/github-cei4mv?file=README.md)
+</section>
 
 Authentication in web applications can be daunting. I know it was for me, but after scouring the internet
 for great free and open source projects, I think we got a neat solution. 
@@ -19,21 +27,21 @@ Svelte and SvelteKit makes web development easy and reactive with
 ease. Its decisions when it comes to reserved file names and separation of concerns helps with grasping the mental
 model. As a final note, the rest of this blog will assume you know the basics around HTML, CSS, and Javascript. 
 
-> Also, I'm fairly new to web development. This is **less** of a "tutorial" and more of a way I've learned to make this work for me.
-If I've fibbed on a tech explanation or know of a better solution or why it shouldn't be done this way, please let me know!
-I'm always learning! 
+
 
 Now let's get this started!
 
 ## Install and Initial Configuration
 ### Authorizer and Railway Setup
-Before anything, let's get Authorizer set up. Go to [Railway](https://railway.app) and create a new project.
-From here, choose **Deploy a template** and choose **Authorizer**. Once created, the project should have three 
-services made, a Redis and Postgres database, and a site hosting the Authorizer dashboard. Open the dashboard and 
-you'll be met with a login screen. Create and enter a new password and login to see your Client ID. 
-Keep this in mind and ready for the next step of configuration.
+Before anything, let's get Authorizer set up. 
+- Go to [Railway](https://railway.app) and create a new project.
+- From here, choose **Deploy a template** and choose **Authorizer**. Once created, the project should have three 
+services made, a Redis and Postgres database, and a site hosting the Authorizer dashboard. 
+- Open the dashboard and you'll be met with a login screen. 
+- Create and enter a new password and login to see your **Client ID**. Keep this in mind and ready for the 
+next step of configuration.
 
-// IMAGES AND VIDEOS?
+> Images and Diagrams to be added soon.
 
 ### SvelteKit and NPM Package Install
 > The following requires you to have [Node.js](https://nodejs.org/en) installed if you want to develop 
@@ -41,18 +49,18 @@ this project on your local computer. If you want to just try this out, you can u
 [StackBlitz](https://stackblitz.com) and [Replit](https://replit.com) for online cloud development.
 
 Next up is your web application. To create a SvelteKit project, use the terminal and enter `npm create svelte@latest`
-to go through the prompts. I will be using Typescript for this tutorial, but it is not necessary. I would
-recommend getting used to it as it is being more preferred for production/professional developments.
+to go through the prompts. I will be using Typescript for this tutorial, but it is not necessary. 
 
-// IMAGES AND VIDEOS?
+> Images and Diagrams to be added soon.
 
-Use the terminal to go inside the project folder and we can install the Authorizer Svelte-specific package by
-entering `npm i --save @authorizerdev/authorizer-svelte`. To setup the project for Authorizer, we will need to 
-create a `.env` file in the root of our SvelteKit projects. We will make a few environment variables called
-`PUBLIC_AUTHORIZER_URL` and `PUBLIC_AUTHORIZER_CLIENT_ID`. Set the URL to where the Authorizer dashboard is set, which you
+- Use the terminal to go inside the project folder (eg via `cd`) 
+- Install the Authorizer Svelte package: `npm i --save @authorizerdev/authorizer-svelte`. 
+- To setup the project for Authorizer, we will need to create a `.env` file in the root of our SvelteKit projects. 
+- We will make a few environment variables called `PUBLIC_AUTHORIZER_URL` and `PUBLIC_AUTHORIZER_CLIENT_ID`.
+Set the URL to where the Authorizer dashboard is set, which you
 can find in your Railway project page, and the client ID can be found inside said dashboard.
 
-// IMAGES
+> Images and Diagrams to be added soon.
 
 ## Basic Authorizer Usage
 To start using Authorizer, we are going to initialize it using the `AuthorizerProvider` component to wrap
@@ -126,7 +134,7 @@ Speaking of which...
 
 *Okay, there's a lot going on.* Instead of just talking about the code, let's use a diagram to explain what all these mean.
 
-// DIAGRAM (CODETHROUGH?) Toggle to read explanation (like a footnote) dont force people into reading this lol
+> Images and Diagrams to be added soon.
 
 As you can see, the `+layout.svelte` is the parent of `+page.svelte`, and it is holding the `AuthorizerProvider`
 and with it comes a `authorizerContext` [being set][1]. A [context][2] is used in Svelte to allow parents and 
@@ -152,9 +160,11 @@ The way I implemented this is using cookies. From my understanding, cookies are 
 in the client's browsers that can be set and accessed by web applications. In this case, we are going to put the user's Authorizer ID
 and the access token as cookies and make sure they *expire* when the access token does. To do this, we are going to modify our current pages.
 
-First we are going to move our current `+layout.svelte` and `+page.svelte` files, and a new `+layout.server.ts` file,
-into a new page called `/login` (we'll add a button  in the main page to go to it). Next, we're going to create a new page folder called 
-`/redirect` that has a `+page.server.ts` and `+page.svelte`. Now let's add some code:
+- First we are going to move our current `+layout.svelte` and `+page.svelte` files into a `/login` page folder.
+- Let's also add a new `+layout.server.ts` file in the `/login` folder.
+- In the `+page.svelte` in the `/routes/root`, we'll add a button that links to the `/login` page. 
+- Next, we're going to create a new page folder called `/redirect` that has a `+page.server.ts` and 
+`+page.svelte`. Now let's add some code:
 
 ```svelte
 <!-- /src/routes/+page.svelte -->
@@ -348,16 +358,30 @@ export const actions : Actions = {
 }
 ```
 
-> I won't explain SvelteKit forms here, but if their [documentation][7] is amazing, as well as their
+> I won't explain SvelteKit forms here, but their [documentation][7] is amazing, as well as their
 [tutorial][8]. Maybe in another explainer...
 
 # Conclusion
 
+<section class="not-prose flex flex-row gap-4 items-center">
+**See this project:**
+<a href="https://github.com/zeucapua/svelte-authorizer-demo" class="not-prose">
+  <button class="px-4 py-2 rounded-xl text-sm bg-accent text-accent-content">Open in GitHub</button>
+</a>
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/github-cei4mv?file=README.md)
+</section>
+
 And with all that, we have a working *free* OSS authentication solution with Authorizer and SvelteKit. 
 Modern web development is amazing that anyone new (like me) can actually wrap their heads around something 
-new and complex fairly easily. As an overview, let's check all of the files in one place:
+new and complex fairly easily. 
 
-// maybe StackBlitz demo to show files and functionality
+If you found this explainer useful, please consider giving the 
+[GitHub repo](https://github.com/zeucapua/svelte-authorizer-demo) a star, and follw me on
+[Twitter](https://twitter.com/zeu_dev).Also, I'm fairly new to web development. 
+This is **less** of a "tutorial" and more of a way I've learned to make this work for me. If I've fibbed 
+on a tech explanation or know of a better solution or why it shouldn't be done this way, please let me know!
+I'm always learning! 
+
 
 [1]: https://github.com/authorizerdev/authorizer-svelte/blob/main/src/lib/components/AuthorizerProvider.svelte#L209
 [2]: https://kit.svelte.dev/docs/state-management#using-stores-with-context

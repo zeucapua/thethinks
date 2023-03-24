@@ -3,6 +3,11 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import BlogCard from "../components/BlogCard.astro";
 import { getCollection } from "astro:content";
 const blogs = await getCollection("blogs");
+blogs .sort((a, b) => {
+  const pubDateA = new Date(a.data.publish_date);
+  const pubDateB: Date = new Date(b.data.publish_date);
+  return pubDateB.getTime() - pubDateA.getTime();
+});
 ---
 
 <SiteLayout title="The Thinks by Zeu">
