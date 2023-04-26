@@ -1,5 +1,4 @@
 ---
-layout: ../../layouts/PostLayout.astro
 title: Init Posts
 description: A brand new start
 date: "2023-04-26"

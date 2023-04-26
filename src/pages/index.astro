@@ -1,13 +1,17 @@
 ---
+import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PostCard from "../components/PostCard.astro";
-const all_posts = await Astro.glob("../pages/posts/*.{md,mdx}");
+
+const posts = await getCollection("posts");
+const tutorials  = await getCollection("tutorials");
 ---
 
 <SiteLayout title="The Thinks">
   <section class="flex flex-col gap-4 w-full max-w-xl">
     <h1 class="text-4xl font-bold">Recent Posts</h1>
     <div class="divider"></div>
-    { all_posts.map((post) => ( <PostCard {post} /> )) }
+    { posts.map((post) => ( <PostCard {post} /> )) }
+    { tutorials.map((post) => ( <PostCard {post} /> )) }
   </section>
 </SiteLayout>

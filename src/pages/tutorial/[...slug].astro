@@ -1,0 +1,17 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tutorials = await getCollection('tutorials');
+  return tutorials.map((tutorial) => ({
+    params: { slug: tutorial.slug }, props: { tutorial },
+  }));
+}
+const { tutorial } = Astro.props;
+const { Content } = await tutorial.render();
+---
+
+<ContentLayout title={tutorial.data.title} description={tutorial.data.description} date={tutorial.data.date}>
+  <Content />
+</ContentLayout>
