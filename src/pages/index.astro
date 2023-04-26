@@ -1,15 +1,13 @@
 ---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import PostCard from "../components/PostCard.astro";
+const all_posts = await Astro.glob("../pages/posts/*.{md,mdx}");
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<SiteLayout title="The Thinks">
+  <section class="flex flex-col gap-4 w-full max-w-xl">
+    <h1 class="text-4xl font-bold">Recent Posts</h1>
+    <div class="divider"></div>
+    { all_posts.map((post) => ( <PostCard {post} /> )) }
+  </section>
+</SiteLayout>
