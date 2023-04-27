@@ -6,6 +6,7 @@ const post_collection = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.string(),
+    draft: z.boolean(),
   }),
 })
 
@@ -14,6 +15,7 @@ const tutorial_collection = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.string(),
+    draft: z.boolean(),
   }),
 })
 

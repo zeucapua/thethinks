@@ -4,7 +4,7 @@ import SiteLayout from "./SiteLayout.astro";
 const { title, description, date } = Astro.props;
 ---
 
-<SiteLayout>
+<SiteLayout title={title + " | The Thinks"}>
 
   <section class="flex flex-col gap-4 items-center">
     <h1 class="text-5xl font-bold">{title}</h1>

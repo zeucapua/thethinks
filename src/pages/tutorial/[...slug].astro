@@ -3,7 +3,9 @@ import ContentLayout from '../../layouts/ContentLayout.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const tutorials = await getCollection('tutorials');
+  const tutorials = await getCollection('tutorials', ({ data }) => {
+    return data.draft === false;
+  });
   return tutorials.map((tutorial) => ({
     params: { slug: tutorial.slug }, props: { tutorial },
   }));
