@@ -20,7 +20,7 @@ const tutorial_collection = defineCollection({
 })
 
 export const collections = { 
-  'posts': post_collection, 
-  'tutorials': tutorial_collection 
+  'post': post_collection, 
+  'tutorial': tutorial_collection 
 }
 

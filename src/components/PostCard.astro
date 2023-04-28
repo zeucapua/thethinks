@@ -6,8 +6,9 @@ export interface Props {
 }
 
 const { post } = Astro.props;
+console.log(post.collection);
 
-const directory = post.id.includes("posts") ? "/post/" : "/tutorial/";
+const directory = post.collection + "/";
 ---
 
 <a href={directory + post.slug}>

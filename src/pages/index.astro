@@ -3,12 +3,13 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PostCard from "../components/PostCard.astro";
 
-const posts = await getCollection("posts", ({ data }) => {
+const posts = await getCollection("post", ({ data }) => {
   return data.draft === false;
 });
-const tutorials  = await getCollection("tutorials", ({ data }) => {
+const tutorials  = await getCollection("tutorial", ({ data }) => {
   return data.draft === false;
 });
+
 ---
 
 <SiteLayout title="The Thinks">
