@@ -5,15 +5,15 @@ date: "2023-05-01"
 draft: false 
 ---
 
-Table of Contents
-- Prerequisites
-- Installation
-- Project Configuration
-- Authentication with Auth.js
-- Databases with Prisma 
-- Dynamic Routing 
+### Table of Contents
+- [Prerequisites](#Prerequisites)
+- [Installation](#Installation)
+- [Project Configuration](#Configuration)
+- [Authentication with Auth.js](#Authentication)
+- [Databases with Prisma](#Databases) 
+- [Dynamic Routing](#Dynamic-Routing) 
 
-## Prerequisites
+## Prerequisites <a name="Prerequisites"></a> 
 
 Before getting started with the installation, we will need a database to store our data in, as well as get our Discord developer 
 application ready to use for our OAuth solution. For this tutorial, we will use Railway to spin up a PostgreSQL database. 
@@ -28,13 +28,13 @@ application. See below on how we to create one and find those environment variab
 [TODO]
 
 Keep track of your PostgreSQL `DATABASE_URL`, as well as your Discord `CLIENT_ID` and `CLIENT_SECRET`. They will be stored inside 
-of our `.env` file, as well as a `AUTH_SECRET` for Auth.js (which you can generate randomly by going to the terminal and typing in
+our `.env` file, as well as a `AUTH_SECRET` for Auth.js (which you can generate randomly by going to the terminal and typing in
 `openssl rand -base64 32`.
 
 With that said, also ensure that you have Node.js and NPM installed. Find the instructions for your OS 
 [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
-## Installation
+## Installation <a name="Installation"></a> 
 
 Let's create our SvelteKit project and install our packages (TailwindCSS, DaisyUI, Prisma, and Auth.js) using npm:
 
@@ -56,13 +56,13 @@ npm install @prisma/client @next-auth/prisma-adapter
 npm install prisma --save-dev
 ```
 
-## Project Configuration
+## Project Configuration <a name="Configuration"></a> 
 
 After installing our packages, we're going to do some housekeeping before able to actually use them.
 
 ### TailwindCSS and DaisyUI 
 
-> This is completely optional and you can use plain CSS or other CSS-in-JS solutions 
+> This is completely optional. You can use plain CSS or other CSS-in-JS solutions 
 (like Bootstrap, Twind, UnoCSS, PicoCSS, etc.) instead.
 
 Inside our project folder, find the `tailwind.config.js` and change the `content` and `plugins` lines to the following:
@@ -73,7 +73,7 @@ export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {}
-  },t
+  },
   plugins: [require("daisyui")]
 };
 ```
@@ -119,7 +119,7 @@ AUTH_SECRET="<from terminal (openssl rand -base64 32)>"
 
 Once that is set, go back to the `/prisma/schema.prisma` file and add a model for our posts:
 
-```
+```prisma
 model Post {
   id      String @id @default(cuid())
   content String 
@@ -152,7 +152,7 @@ alternatives that you can consider (Auth0, ClerkJS, Authorizer, etc.) that may b
 
 To start authenticating, let's add more onto our `schema.prisma` file to include all the information from Auth.js.
 
-```
+```prisma
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -290,7 +290,7 @@ include set the `User` property with the ID and return the session.
 
 With that said, we are done with all the prep work and now we can start making pages happen!
 
-## Authentication with Auth.js
+## Authentication with Auth.js <a name="Authentication></a> 
 
 For this application, we are going to use site-wide authentication so we know the state no matter where we are. That said means we 
 are going to use our `/src/routes/+layout.svelte` file from earlier. Before rendering the actual layout component, 
@@ -376,7 +376,7 @@ file, which will be our index page, depending on whether there is a user logged 
 {/if}
 ```
 
-## Databases with Prisma 
+## Databases with Prisma <a name="Databases"></a> 
 
 Next, let's actually connect to the database to read and create posts. Most of this will need to import the Prisma client that 
 we made in the `/src/lib` directory. 
@@ -398,7 +398,7 @@ First, let's finish the form above for creating our post:
 {/if}
 ```
 
-Here we have a form with a method of **POST** with the action of **createPost**. Inside is an input tag with the name **content**
+Here we have a form with a method of **POST** with the action of **createPost**. Inside is an input tag with the name **content**,
 which we can use to grab its value. You can add a button inside the form to submit it, but for now, pressing Enter will do the same.
 To use this form, we have to create and export an `actions` variable in a `/src/routes/+page.server.ts` file: 
 
@@ -407,7 +407,7 @@ import { prisma } from "$lib/prisma";
 import { fail } from "@sveltejs/kit";
 
 export const actions = {
-  createPost: async ({ locals, request }) {
+  createPost: async ({ locals, request }) => {
     const data = await request.formData();
     const content = data.get("content");
 
@@ -441,7 +441,7 @@ act like an error.
 
 ### Reading Posts with Prisma 
 
-Now that we can create posts, we should actually get the posts so we can read them in a column in our index page. To get the posts, 
+Now that we can create posts, we should actually get the posts, so we can read them in a column in our index page. To get the posts, 
 let's go back into our `/src/routes/+page.server.ts` file and add a `load` function that will use our Prisma client and return it:
 
 ```ts 
@@ -480,9 +480,211 @@ directory (the same place where our Prisma client lives):
 
 ```svelte 
 <script lang="ts">
+  import { format } from "timeago.js";
   import type { Post, User } from "@prisma/client"
 
   export let post : Post; 
   export let user : User;
+
+  let duration = format(post.createdAt);
 </script>
+
+<div class="flex flex-row gap-8 items-center">
+  <a href={`/u/${user.id}`} class="btn btn-ghost btn-circle avatar">
+    <img src={user.image} alt={`${user.name}`} class="w-16 h-16 rounded-full" />
+  </a>
+  <div class="flex flex-col gap-2">
+    <a href={`/p/${post.id}`}>
+      <p class="text-neutral-400 pb-2">
+        <a href={`/u/${user.id}`}>@{user.name}</a>
+        | { duration }
+      </p>
+    </a>
+    <p class="text-xl text-white">{post.content}</p>
+  </div>
+</div>
+
 ```
+
+> Above there is a `duration` variable that takes in the **createdAt** property from the post. To format it like 
+how it is seen on Twitter, I've installed **timeago.js** (via `npm i timeago.js`) and used its `format()` function.
+This is optional, but it does make it easier to render the time. Another option that I haven't explored yet is 
+`Intl.RelativeTimeFormat`, so if you don't want to install another package, try that one out!
+
+As you can see above, we are going to be creating new pages for the user and post using their IDs. But before 
+getting that done, let's keep working on our `PostView` by adding a *clapping* feature.
+
+### Clapping Posts (aka Likes)
+
+I'll explain the following after we add to our `PostView`:
+
+```svelte 
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { enhance } from "$app/forms";
+  // other imports
+
+  // other variables
+  let claps : number;
+
+  onMount(() => { claps = post.claps; });
+
+  function onClap() { claps += 1; }
+</script>
+
+<div class="flex flex-col gap-8 items-center">
+  <!-- the other stuff from before -->
+  <div class="flex flex-col gap-2">
+    <!-- the other stuff from before -->
+    <form method="POST" action="?/clapPost" use:enhance>
+      <input name="post_id" type="hidden" value={post.id} />
+      <button 
+        on:click={onClap}
+        class="btn btn-outline btn-secondary rounded-full"
+      >
+        👏 {#if !claps}...{:else} {claps} {/if}
+      </button>
+    </form>
+  </div>
+</div>
+```
+
+So first things first, let's address the form. There is a hidden input that carries the **post.id**, which will be 
+used to determine, which post to update later on in the action. Next is the new `use:enhance` prop on the form. This 
+is from SvelteKit that allows the form to submit, but crucially it doesn't do full-page reloads. We don't want to 
+refresh the screen every time we clap a post, so this is a great solution for that. 
+
+But that also means the claps won't update because the Prisma call that finds the post won't rerun. And so to combat
+this, we can use `onMount(() => { claps = post.claps })` to hold the count locally to the component when first 
+rendering, which we can update everytime we press the form button via the `onClap()` function.
+
+> That's all good, but how can we have a form in a separate component when we need a 
+`+page.server.ts` file to create an action? 
+
+Well, as far as I know, since this component is being rendered as a part of the `+page.svelte`, the form will 
+find the appropriate action given it's rendered location. With that said let's go to our `/src/routes/+page.server.ts`
+file and create that `clapPost` action:
+
+```ts 
+export const actions = {
+  createPost: ...,
+  clapPost: async ({ request }) => {
+    const data = await request.formData();
+    const post_id = data.get("post_id");
+
+    const post = await prisma.post.update({
+      where: { id: post_id },
+      data: { claps: { increment: 1 } }
+    });
+
+    if (!post) {
+      return fail(502, { message: "Cannot clap right now. Try again." });
+    }
+  }
+}
+```
+
+## Dynamic Routing <a name="Dynamic-Routing"></a> 
+
+Last thing we can add to our application are dynamic routes to have pages for every post and user. With SvelteKit's 
+file-based routing, we can create them in our `src/routes/` folder with brackets, which in our case 
+will be under `/u/[id]/+page.svelte` and `/p/[id]/+page.svelte`. We will also add a `+page.server.ts` file under 
+each route to get the appropriate data from Prisma based on the dynamic route paramater (`id`). They have similar
+code, so I'll put them all below:
+
+### /u/[id]
+
+#### +page.server.ts
+
+```ts 
+import { prisma } from "$lib/prisma";
+import { error } from "@sveltejs/kit";
+
+export async function load({ params }) {
+  const id = params.id; // corresponds to [id]
+
+  const user_data = await prisma.user.findUnique({
+    where: { id },
+    include: { posts: true },
+  });
+  
+  if (!user_data) { return error(404, "User not found"); }
+
+  const { posts, ...user } = user_data;
+
+  return { user, posts }
+}
+```
+
+#### +page.svelte
+
+```svelte 
+<script>
+  import PostView from "$lib/PostView.svelte";
+  import type { User, Post } from "@prisma/client";
+
+  export let data;
+  const user : User = data.user;
+  const posts : Post[] = data.posts;
+</script>
+
+<section class="flex flex-row gap-8 items-center">
+  <img src={user.image} alt={`${user.name} Profile`} class="w-18 h-18 rounded-full" />
+  <p class="text-4xl text-white">@{user.name}</p>
+</section>
+
+{#if !posts}
+  <p>This user hasn't posted anything yet.</p>
+{:else}
+  {#each posts as post}
+    <PostView {post} {user} />
+  {/each} 
+{/if}
+```
+
+### /p/[id]
+
+#### +page.server.ts 
+
+```ts 
+import { prisma } from "$lib/prisma";
+import { error } from "@sveltejs/kit";
+
+export async function load({ params }) {
+  const id = params.id;
+
+  const post_data = await prisma.post.findUnique({
+    where: { id },
+    include: { user: true },
+  });
+
+  if (!post_data) { return error(404, "Post not found"); }
+
+  const { user, ...post } = post_data;
+
+  return { user, post }
+}
+```
+
+#### +page.svelte
+
+```svelte
+<script lang="ts">
+  import PostView from "$lib/PostView.svelte";
+  import type { User, Post } from "@prisma/client";
+
+  export let data;
+  const post : Post = data.post;
+  const user : User = data.user;
+</script>
+
+<PostView {user} {post} />
+```
+
+## That's all folks
+
+Congratulations, you've completed a full stack SvelteKit application! Built with Auth.js and Prisma allows us to 
+create a website with authentication and database manipulation. Thank you if you'd read this far and thanks to 
+Theo for the inspiration. Hopefully this information is useful for you to get started with Svelte and SvelteKit. 
+To learn more, I recommend joining the Svelte discord and read the official documentation to get all the help you 
+might need. 'Till next time :)
